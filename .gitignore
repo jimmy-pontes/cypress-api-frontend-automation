@@ -1,0 +1,4 @@
+.env.*
+node_modules/
+cypress/screenshots
+cypress/downloads
