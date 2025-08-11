@@ -287,3 +287,93 @@ Cypress.Commands.add('logoutUser', () => {
   cy.get(selectors.listaCompras.logoutButton).click();
 
 });
+
+
+// Comando para validar elementos da área administrativa
+Cypress.Commands.add('validarAreaAdmin', (nomeUsuario) => {
+  cy.url().should('include', '/admin/home');
+  cy.contains('Bem Vindo').should('be.visible');
+  cy.contains(nomeUsuario).should('be.visible');
+  
+  // Validar header admin
+  cy.get(selectors.headerAdmin.cadastrarUsuario).should('be.visible');
+  cy.get(selectors.headerAdmin.listarUsuarios).should('be.visible');
+  cy.get(selectors.headerAdmin.cadastrarProdutos).should('be.visible');
+  cy.get(selectors.headerAdmin.listarProdutos).should('be.visible');
+  cy.get(selectors.headerAdmin.relatorios).should('be.visible');
+  cy.get(selectors.headerAdmin.logoutButton).should('be.visible');
+
+  // Validar home admin
+  cy.get(selectors.homeAdmin.cadastrarUsuario).should('be.visible');
+  cy.get(selectors.homeAdmin.listarUsuarios).should('be.visible');
+  cy.get(selectors.homeAdmin.cadastrarProdutos).should('be.visible');
+  cy.get(selectors.homeAdmin.listarProdutos).should('be.visible');
+  cy.get(selectors.homeAdmin.relatorios).should('be.visible');
+  
+});
+
+// Comando para validar elementos da área do usuário
+Cypress.Commands.add('validarAreaUsuario', () => {
+  cy.url().should('include', '/home');
+  
+  // Confirmar que NÃO possui acesso às funções de administrador
+  cy.get(selectors.headerAdmin.cadastrarUsuario).should('not.exist');
+  cy.get(selectors.headerAdmin.listarUsuarios).should('not.exist');
+  cy.get(selectors.headerAdmin.cadastrarProdutos).should('not.exist');
+  cy.get(selectors.headerAdmin.listarProdutos).should('not.exist');
+  cy.get(selectors.headerAdmin.relatorios).should('not.exist');
+
+  // Validar elementos da visão do usuário
+  cy.contains('Serverest Store').should('be.visible');
+  cy.get(selectors.homeUser.listaCompras).should('be.visible');
+  cy.get(selectors.homeUser.carrinhoButton).should('be.visible');
+  cy.get(selectors.homeUser.botaoPesquisar).should('be.visible');
+  cy.get(selectors.homeUser.adicionarProdutoLista).should('be.visible');
+  cy.get(selectors.homeUser.logoutButton).should('be.visible');
+  
+});
+
+// Comando para validar elementos da tela de login
+Cypress.Commands.add('validarTelaLogin', () => {
+  cy.url().should('include', '/login');
+  cy.get(selectors.telaLogin.inputEmail).should('be.visible');
+  cy.get(selectors.telaLogin.inputSenha).should('be.visible');
+  cy.get(selectors.telaLogin.botaoLogin).should('be.visible');
+  cy.get(selectors.telaLogin.linkCadastro).should('be.visible');
+  
+});
+
+// Comando para validar mensagem de erro de login
+Cypress.Commands.add('validarErroLogin', () => {
+  cy.contains('Email e/ou senha inválidos').should('be.visible');
+  cy.url().should('include', '/login');
+  
+});
+
+// Comando para fazer logout
+Cypress.Commands.add('fazerLogout', () => {
+  cy.get(selectors.homeUser.logoutButton).click();
+  cy.validarTelaLogin();
+  
+});
+
+// Comando para tentar login (sem validação de sucesso)
+Cypress.Commands.add('tentarLogin', (email, senha) => {
+  cy.visitLoginPage();
+  cy.get(selectors.telaLogin.inputEmail).type(email);
+  cy.get(selectors.telaLogin.inputSenha).type(senha);
+  cy.get(selectors.telaLogin.botaoLogin).click();
+  
+});
+
+// Comando para login completo com validação de sucesso
+Cypress.Commands.add('fazerLoginCompletoComValidacao', (userData, tipoUsuario = 'user') => {
+  cy.fazerLoginCompleto(userData);
+  
+  if (tipoUsuario === 'admin') {
+    cy.validarAreaAdmin(userData.nome);
+  } else {
+    cy.validarAreaUsuario();
+  }
+  
+});
