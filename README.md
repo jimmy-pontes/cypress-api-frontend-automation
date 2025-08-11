@@ -5,6 +5,18 @@ Este projeto demonstra a implementação de testes automatizados de API e Fronte
 - **Frontend:** https://front.serverest.dev  
 - **API & Documentação:** https://serverest.dev
 
+## 📋 Pré-requisitos
+
+Antes de executar os testes, certifique-se de ter instalado:
+
+### **Node.js (Obrigatório)**
+- **Versão mínima:** 16.x ou superior (recomendado: 18+)
+- **Download:** [https://nodejs.org/](https://nodejs.org/)
+- **Verificar instalação:** 
+  ```bash
+  node --version
+  npm --version
+  ```
 
 ## ⚙️ Instalação e Configuração
 
@@ -12,7 +24,7 @@ Este projeto demonstra a implementação de testes automatizados de API e Fronte
 
 ```bash
 git clone https://github.com/jimmy-pontes/cypress-api-frontend-automation.git
-cd nome-do-repositorio
+cd cypress-api-frontend-automation
 ```
 
 ### 2. Instale as dependências
@@ -21,24 +33,10 @@ cd nome-do-repositorio
 npm install
 ```
 
-### 3. Configure as variáveis de ambiente
-
-Crie o arquivo `.env.dev` na raiz do projeto com o seguinte conteúdo:
-
-```env
-USER_EMAIL=example@example.com
-USER_PASS=example_password
-ADMIN_EMAIL=admin@example.com
-ADMIN_PASS=example_password
-```
-
-Substitua os valores de e-mail e senha pelas credenciais corretas para execução dos testes localmente.
-
-> ℹ️ A arquitetura permite testes em múltiplos ambientes (`dev`, `staging`, `prod`). Para isso, basta criar os arquivos `.env.dev`, `.env.staging` e `.env.prod`, com os respectivos dados de cada ambiente.
-
-
 ## 🚀 Execução dos Testes
+
 Os comandos personalizados estão definidos no arquivo package.json
+
 ### Interface do Cypress
 
 ```bash
@@ -75,37 +73,70 @@ Executa todos os testes contidos na pasta especificada.
 
 Para rodar os testes em um ambiente específico, adicione o parâmetro `ENV` antes do comando:
 
+- Para Windows:
 ```bash
-ENV=staging npm run spec --spec="cypress/e2e/..."
+$env:ENV = "staging"; npm run {comando}
+```
+
+- Para MacOs
+```bash
+ENV=staging npm run {comando}
 ```
 
 
 ## 🗂️ Estrutura do Projeto
 
 ```
-/cypress
-  /e2e
-    /api-tests           → Testes de API
-    /frontend-tests      → Testes da interface web
-  /support
-    commands.js          → Comandos personalizados reutilizáveis
-    config.js            → Configuração de URLs por ambiente
-    e2e.js               → Centralização das importações do projeto
-    users.js             → Gerenciamento de credenciais por ambiente
+cypress-api-frontend-automation/
+├── cypress/
+│   ├── e2e/
+│   │   ├── api-tests/           → Testes de API
+│   │   │   
+│   │   └── frontend-tests/      → Testes da interface web
+│   │      
+│   ├── fixtures/                → Dados de teste (JSON)
+│   ├── mappings/
+│   │   ├── routes/              → Rotas do backend
+│   │   │   
+│   │   └── selectors/           → Seletores do frontend
+│   │       
+│   ├── screenshots/             → Screenshots dos testes
+│   └── support/
+│       ├── commands.js          → Comandos personalizados reutilizáveis
+│       ├── config.js            → Configuração de URLs por ambiente
+│       └── e2e.js               → Centralização das importações
+├── cypress.config.js            → Configuração principal do Cypress
+├── package.json                 → Dependências e scripts
+└── README.md                    → Documentação do projeto
 ```
 
 
 ## 🧠 Arquivos principais da arquitetura
 
 
-#### 📄 `cypress/e2e.js`
+#### 📄 `support/commands.js`
+
+Este arquivo centraliza todas os comandos personalizados que são chamados nos arquivos de teste.
+
+- Comandos que fazem diversas verificações e ações constantes nos testes.
+- Possibilita testes menos verbosos chamando comandos específicos.
+- Melhor manutenção e centralização de código.
+
+**Exemplos de commands:**
+```javascript
+cy.generateUser()        // Gera dados de usuário
+cy.createUser()          // Cria usuário via API
+cy.fazerLoginCompleto()  // Login completo via Frontend
+cy.visitLoginPage()      // Navega para página de login
+```
+
+#### 📄 `support/e2e.js`
 
 Este arquivo centraliza todas as configurações e importações necessárias para a execução dos testes.
 
 - É carregado automaticamente pelo Cypress ao iniciar os testes.
-- Nele são importados módulos como `commands.js`, `users.js`, `config.js`, além das variáveis de ambiente.
+- Nele são importados módulos como `commands.js`, `config.js`, além das variáveis de ambiente.
 - Garante que todas as dependências estejam disponíveis globalmente nos testes, evitando importações repetidas em cada arquivo de teste.
-
 
 
 #### 📄 `support/config.js`
@@ -113,48 +144,28 @@ Este arquivo centraliza todas as configurações e importações necessárias pa
 Este arquivo define as **URLs base** utilizadas durante a execução dos testes, separadas por ambiente.
 
 
-#### 📄 `users.js`
-
-Este arquivo centraliza as credenciais utilizadas nos testes, separando-as por tipo de usuário (`user`, `admin`), com valores carregados dinamicamente a partir das variáveis de ambiente.
-
-### Exemplo:
-
-```js
-const users = {
-  user: {
-    email: Cypress.env('USER_EMAIL'),
-    password: Cypress.env('USER_PASS')
-  },
-  admin: {
-    email: Cypress.env('ADMIN_EMAIL'),
-    password: Cypress.env('ADMIN_PASS')
-  }
-};
-module.exports = users;
-```
-
-### 📌 Finalidade
-
-- **Segurança:** Evita expor credenciais sensíveis.
-- **Flexibilidade:** Permite execução de testes com usuários diferentes por ambiente (`dev`, `staging`, `prod`).
-- **Centralização:** Facilita a manutenção e reutilização das credenciais nos testes.
-
 #### 📄 `cypress.config.js`
 
-Este arquivo é o ponto central de configuração do Cypress. Ele define o comportamento global dos testes e, neste projeto, é responsável por **carregar dinamicamente as variáveis de ambiente de acordo com o ambiente de execução** (`dev`, `staging`, `prod`).
+Este arquivo é o ponto central de configuração do Cypress. Ele define o comportamento global dos testes e, neste projeto, permite a execução dos testes por ambiente (`dev`, `staging`, `prod`).
 
-### 📌 Funcionamento detalhado
+## 🎯 Cenários de Teste Implementados
 
-O `cypress.config.js` utiliza os pacotes `dotenv` e `fs` para ler o arquivo `.env` do ambiente configurado (ex: `.env.dev`, `.env.staging`).
+### **API Tests:**
+- ✅ **Login:** Autenticação com diferentes tipos de usuário
+- ✅ **Usuários:** CRUD completo de usuários
+- ✅ **Produtos:** CRUD completo de produtos
+- ✅ **Carrinhos:** Gerenciamento de carrinho de compras
+- ✅ **Cadastro:** Validações de cadastro via API
 
-Ele verifica o valor da variável `ENV` (padrão `dev`), carrega o arquivo `.env.${ENV}`, e injeta essas variáveis em `config.env`.
-
+### **Frontend Tests:**
+- ✅ **Login:** Fluxo completo de autenticação via interface
+- ✅ **Cadastro:** Validações de cadastro via formulário
+- ✅ **Lista de Compras:** Adição de produtos à lista
 
 ## ✅ Boas Práticas Implementadas
 
 - Arquitetura multiambiente para testes isolados e realistas.
 - Separação clara entre testes de API e Frontend.
-- Uso de variáveis de ambiente para segurança e flexibilidade.
 - Comandos customizados reutilizáveis para reduzir duplicações.
 - Organização modular para facilitar manutenção e escalabilidade.
 - O projeto pode ser facilmente integrado a pipelines CI/CD.
@@ -164,7 +175,6 @@ Ele verifica o valor da variável `ENV` (padrão `dev`), carrega o arquivo `.env
 
 - Node.js (versão recomendada: 18+)
 - Cypress (instalado via `npm install`)
-- Acesso às credenciais de teste da aplicação ServerRest
 
 
 ## 👤 Autor
