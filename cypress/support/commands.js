@@ -1,3 +1,6 @@
+
+//////////////////////////////////////////////////////////BACKEND///////////////////////////////////////////////////////
+
 // Login
 Cypress.Commands.add('login', (email, password) => {
   return cy.api({
@@ -101,9 +104,6 @@ Cypress.Commands.add('createProduct', (productData, authToken) => {
 });
 
 
-
-
-
 // Gerar payload padrão de carrinho
 Cypress.Commands.add('generateCart', (overrides = {}) => {
   const defaultCart = {
@@ -148,4 +148,142 @@ Cypress.Commands.add('createProductForCart', (authToken) => {
     },
     body: productData
   });
+});
+
+
+
+//////////////////////////////////////////////////////////FRONTEND///////////////////////////////////////////////////////
+
+
+Cypress.Commands.add('visitLoginPage', () => {
+  cy.visit(Cypress.config('frontendBaseUrl'));
+  
+  // Verificar se todos os elementos da tela de login estão visíveis
+  cy.get(selectors.telaLogin.inputEmail, { timeout: 10000 }).should('be.visible');
+  cy.get(selectors.telaLogin.inputSenha).should('be.visible');
+  cy.get(selectors.telaLogin.botaoLogin).should('be.visible');
+  cy.get(selectors.telaLogin.linkCadastro).should('be.visible');
+  
+});
+
+
+Cypress.Commands.add('visitCadastro', () => {
+  cy.visit(Cypress.config('frontendBaseUrl') + '/cadastrarusuarios');
+  
+  // Verificar se todos os elementos da tela de cadastro estão visíveis
+  cy.get(selectors.telaCadastro.inputNome, { timeout: 10000 }).should('be.visible');
+  cy.get(selectors.telaCadastro.inputEmail).should('be.visible');
+  cy.get(selectors.telaCadastro.inputPassword).should('be.visible');
+  cy.get(selectors.telaCadastro.checkboxAdministrador).should('be.visible');
+  cy.get(selectors.telaCadastro.botaoCadastrar).should('be.visible');
+  
+});
+
+
+Cypress.Commands.add('preencherCadastro', (userData, isAdmin = false) => {
+  cy.get(selectors.telaCadastro.inputNome).clear().type(userData.nome);
+  cy.get(selectors.telaCadastro.inputEmail).clear().type(userData.email);
+  cy.get(selectors.telaCadastro.inputPassword).clear().type(userData.password);
+  
+  if (isAdmin) {
+    cy.get(selectors.telaCadastro.checkboxAdministrador).check();
+  } else {
+    cy.get(selectors.telaCadastro.checkboxAdministrador).uncheck();
+  }
+  
+});
+
+
+Cypress.Commands.add('cadastrarViaUI', (userData, isAdmin = false) => {
+  cy.visitCadastro();
+  cy.preencherCadastro(userData, isAdmin);
+  cy.get(selectors.telaCadastro.botaoCadastrar).click();
+  });
+
+
+  
+// Comando para adicionar produto ao carrinho
+Cypress.Commands.add('adicionarProdutoLista', () => {
+  cy.get(selectors.homeUser.adicionarProdutoLista).first().click();
+  
+  
+});
+
+
+
+// Comando para fazer login completo via frontend
+Cypress.Commands.add('fazerLoginCompleto', (userData) => {
+  cy.visitLoginPage();
+  
+  cy.get(selectors.telaLogin.inputEmail).type(userData.email);
+  cy.get(selectors.telaLogin.inputSenha).type(userData.password);
+  cy.get(selectors.telaLogin.botaoLogin).click();
+  
+  
+});
+
+
+// Comando para setup completo de produto e usuário
+Cypress.Commands.add('setupProdutoEUsuario', () => {
+  let adminToken, produtoId, userData;
+  
+  // Criar admin para cadastrar produto
+  cy.createAndLoginAdmin();
+  cy.get('@user').then(admin => {
+    adminToken = window.localStorage.getItem('authToken');
+    
+    // Criar produto
+    cy.createProductForCart(adminToken).then(response => {
+      expect(response.status).to.eq(201);
+      produtoId = response.body._id;
+      
+      // Criar usuário padrão para comprar
+      cy.generateUser({ administrador: 'false' }).then(user => {
+        userData = user;
+        cy.createUser(userData).then(response => {
+          expect(response.status).to.eq(201);
+          
+          // Retornar dados necessários
+          cy.wrap({
+            produto: { id: produtoId, ...response.body },
+            usuario: userData,
+            adminToken: adminToken
+          }).as('setupData');
+        });
+      });
+    });
+  });
+});
+
+
+// Comando para acessar lista de compras
+Cypress.Commands.add('visitListaCompras', () => {
+  cy.get(selectors.homeUser.listaCompras).click();
+  
+  // Aguardar página carregar
+  cy.contains('Lista de Compras', { timeout: 10000 }).should('be.visible');
+  
+});
+
+
+
+// Comando para verificar produto na lista de compras
+Cypress.Commands.add('verificarProdutoNaLista', (nomeProduto) => {
+  cy.contains(nomeProduto).should('be.visible');
+  cy.contains('Total: 1').should('be.visible');
+  
+});
+
+
+// limpar lista de compras
+Cypress.Commands.add('limparListaCompras', () => {
+  cy.get(selectors.listaCompras.limparLista).click();
+
+});
+
+
+// fazer logout
+Cypress.Commands.add('logoutUser', () => {
+  cy.get(selectors.listaCompras.logoutButton).click();
+
 });
