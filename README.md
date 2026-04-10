@@ -1,5 +1,7 @@
 # 🧪 Testes Automatizados de API e Frontend
 
+![CI](https://github.com/jimmy-pontes/cypress-api-frontend-automation/actions/workflows/cypress.yml/badge.svg)
+
 Este projeto demonstra a implementação de testes automatizados de API e Frontend utilizando o Cypress, com uma arquitetura modular, escalável e multiambiente. A aplicação alvo é a [ServerRest](https://serverest.dev).
 
 - **Frontend:** https://front.serverest.dev  
@@ -83,6 +85,61 @@ $env:ENV = "staging"; npm run {comando}
 ENV=staging npm run {comando}
 ```
 
+
+## 🚀 CI/CD
+
+O projeto possui integração contínua via **GitHub Actions**. O workflow é disparado automaticamente em:
+
+- **Push** na branch `main`
+- **Pull Request** direcionado à branch `main`
+
+### O que acontece em cada execução
+
+1. O ambiente é provisionado com **Ubuntu** e **Node.js 18**
+2. As dependências são instaladas via `npm ci`
+3. Todos os testes são executados em modo headless
+4. O relatório **Mochawesome** é gerado automaticamente
+5. O relatório é publicado como **artefato** do workflow, disponível para download por 7 dias
+
+O relatório é gerado e publicado mesmo quando há testes falhando, garantindo visibilidade completa dos resultados.
+
+### Como acessar o relatório da pipeline
+
+1. Acesse a aba **Actions** no repositório do GitHub
+2. Selecione a execução do workflow desejada
+3. Na seção **Artifacts**, baixe o arquivo **mochawesome-report**
+4. Extraia o ZIP e abra o `report.html` no navegador
+
+## 📊 Relatório de Testes (Mochawesome)
+
+O projeto utiliza o **Mochawesome** para gerar relatórios HTML visuais com gráficos de testes passados, falhos e pendentes. Screenshots de falhas são embutidas automaticamente no relatório.
+
+### Gerar o relatório
+
+```bash
+npm run report
+```
+
+Este comando executa todos os testes, faz o merge dos resultados e gera o relatório HTML automaticamente.
+
+### Visualizar o relatório
+
+Após a execução, abra o arquivo gerado no navegador:
+
+```bash
+open cypress/reports/report.html
+```
+
+No Windows:
+```bash
+start cypress/reports/report.html
+```
+
+O relatório será gerado em `cypress/reports/report.html`.
+
+### Exemplo do relatório
+
+![Exemplo do relatório Mochawesome](assets/report-example.png)
 
 ## 🗂️ Estrutura do Projeto
 

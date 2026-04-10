@@ -1,9 +1,15 @@
 const { defineConfig } = require("cypress");
-const dotenv = require('dotenv');
-const fs = require('fs');
 
 module.exports = defineConfig({
+  reporter: "mochawesome",
+  reporterOptions: {
+    reportDir: "cypress/reports/json",
+    overwrite: false,
+    html: false,
+    json: true,
+  },
   e2e: {
+    screenshotOnRunFailure: true,
     setupNodeEvents(on, config) {
       const envName = process.env.ENV || 'dev';
 
