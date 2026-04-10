@@ -1,46 +1,68 @@
+import { UserData } from '../../support/types';
+
 describe('Testes de Login - Frontend', () => {
-     
+
   describe('Cenários de Sucesso', () => {
 
     it('Deve fazer login com usuário administrador com sucesso', () => {
-      cy.generateUser({ administrador: 'true' }).then(adminData => {
+      cy.generateUser({ administrador: 'true' }).then((adminData: UserData) => {
         cy.createUser(adminData).then(response => {
           expect(response.status).to.eq(201);
-          
-          cy.fazerLoginCompletoComValidacao(adminData, 'admin');
+
+          cy.intercept('POST', '**/login').as('loginRequest');
+          cy.fazerLoginCompleto(adminData);
+
+          cy.wait('@loginRequest').then(interception => {
+            expect(interception.response?.statusCode).to.eq(200);
+            expect(interception.request.body.email).to.eq(adminData.email);
+            expect(interception.response?.body).to.have.property('authorization');
+          });
+
+          cy.validarAreaAdmin(adminData.nome);
         });
       });
     });
 
     it('Deve fazer login com usuário padrão com sucesso', () => {
-      cy.generateUser({ administrador: 'false' }).then(userData => {
+      cy.generateUser({ administrador: 'false' }).then((userData: UserData) => {
         cy.createUser(userData).then(response => {
           expect(response.status).to.eq(201);
-          
-          cy.fazerLoginCompletoComValidacao(userData, 'user');
+
+          cy.intercept('POST', '**/login').as('loginRequest');
+          cy.fazerLoginCompleto(userData);
+
+          cy.wait('@loginRequest').then(interception => {
+            expect(interception.response?.statusCode).to.eq(200);
+            expect(interception.request.body.email).to.eq(userData.email);
+            expect(interception.response?.body).to.have.property('authorization');
+          });
+
+          cy.validarAreaUsuario();
         });
       });
     });
 
     it('Deve permitir login usando Enter', () => {
-      cy.generateUser().then(userData => {
+      cy.generateUser().then((userData: UserData) => {
         cy.createUser(userData).then(response => {
           expect(response.status).to.eq(201);
-          
+
+          cy.intercept('POST', '**/login').as('loginRequest');
           cy.visitLoginPage();
           cy.get(selectors.telaLogin.inputEmail).type(userData.email);
           cy.get(selectors.telaLogin.inputSenha).type(userData.password + '{enter}');
-          
+
+          cy.wait('@loginRequest').its('response.statusCode').should('eq', 200);
           cy.validarAreaUsuario();
         });
       });
     });
 
     it('Deve fazer logout com sucesso', () => {
-      cy.generateUser({ administrador: 'false' }).then(userData => {
+      cy.generateUser({ administrador: 'false' }).then((userData: UserData) => {
         cy.createUser(userData).then(response => {
           expect(response.status).to.eq(201);
-          
+
           cy.fazerLoginCompletoComValidacao(userData, 'user');
           cy.fazerLogout();
         });
@@ -48,12 +70,12 @@ describe('Testes de Login - Frontend', () => {
     });
 
     it('Deve permanecer autenticado ao dar refresh na página', () => {
-      cy.generateUser({ administrador: 'false' }).then(userData => {
+      cy.generateUser({ administrador: 'false' }).then((userData: UserData) => {
         cy.createUser(userData).then(response => {
           expect(response.status).to.eq(201);
-          
+
           cy.fazerLoginCompletoComValidacao(userData, 'user');
-          
+
           cy.reload();
           cy.validarAreaUsuario();
         });
@@ -65,27 +87,40 @@ describe('Testes de Login - Frontend', () => {
   describe('Cenários de Falha', () => {
 
     it('Deve falhar com email e senha inválidos', () => {
+      cy.intercept('POST', '**/login').as('loginRequest');
       cy.tentarLogin('usuario@inexistente.com', 'senhaErrada123');
+
+      cy.wait('@loginRequest').then(interception => {
+        expect(interception.response?.statusCode).to.eq(401);
+        expect(interception.response?.body.message).to.eq('Email e/ou senha inválidos');
+      });
+
       cy.validarErroLogin();
     });
 
     it('Deve falhar com email válido e senha inválida', () => {
-      cy.generateUser().then(userData => {
+      cy.generateUser().then((userData: UserData) => {
         cy.createUser(userData).then(response => {
           expect(response.status).to.eq(201);
-          
+
+          cy.intercept('POST', '**/login').as('loginRequest');
           cy.tentarLogin(userData.email, 'senhaErrada123');
+
+          cy.wait('@loginRequest').its('response.statusCode').should('eq', 401);
           cy.validarErroLogin();
         });
       });
     });
 
     it('Deve falhar com email inválido e senha válida', () => {
-      cy.generateUser().then(userData => {
+      cy.generateUser().then((userData: UserData) => {
         cy.createUser(userData).then(response => {
           expect(response.status).to.eq(201);
-          
+
+          cy.intercept('POST', '**/login').as('loginRequest');
           cy.tentarLogin('email@inexistente.com', userData.password);
+
+          cy.wait('@loginRequest').its('response.statusCode').should('eq', 401);
           cy.validarErroLogin();
         });
       });
@@ -94,7 +129,7 @@ describe('Testes de Login - Frontend', () => {
     it('Deve falhar ao tentar login com campos vazios', () => {
       cy.visitLoginPage();
       cy.get(selectors.telaLogin.botaoLogin).click();
-      
+
       cy.contains('Email é obrigatório').should('be.visible');
       cy.contains('Password é obrigatório').should('be.visible');
       cy.url().should('include', '/login');
@@ -104,7 +139,7 @@ describe('Testes de Login - Frontend', () => {
       cy.visitLoginPage();
       cy.get(selectors.telaLogin.inputEmail).type('usuario@test.com');
       cy.get(selectors.telaLogin.botaoLogin).click();
-      
+
       cy.contains('Password é obrigatório').should('be.visible');
       cy.url().should('include', '/login');
     });
@@ -113,7 +148,7 @@ describe('Testes de Login - Frontend', () => {
       cy.visitLoginPage();
       cy.get(selectors.telaLogin.inputSenha).type('senha123');
       cy.get(selectors.telaLogin.botaoLogin).click();
-      
+
       cy.contains('Email é obrigatório').should('be.visible');
       cy.url().should('include', '/login');
     });
@@ -130,7 +165,7 @@ describe('Testes de Login - Frontend', () => {
       cy.get(selectors.telaLogin.inputEmail)
         .should('have.attr', 'placeholder')
         .and('include', 'Digite seu email');
-        
+
       cy.get(selectors.telaLogin.inputSenha)
         .should('have.attr', 'placeholder')
         .and('include', 'Digite sua senha');
@@ -155,9 +190,9 @@ describe('Testes de Login - Frontend', () => {
       cy.get(selectors.telaLogin.inputEmail).type('usuario@inexistente.com');
       cy.get(selectors.telaLogin.inputSenha).type('senhaErrada123');
       cy.get(selectors.telaLogin.botaoLogin).click();
-      
+
       cy.contains('Email e/ou senha inválidos').should('be.visible');
-      
+
       cy.get(selectors.telaLogin.inputEmail).clear().should('have.value', '');
       cy.get(selectors.telaLogin.inputSenha).clear().should('have.value', '');
     });

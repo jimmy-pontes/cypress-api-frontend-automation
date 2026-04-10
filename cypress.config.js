@@ -9,6 +9,7 @@ module.exports = defineConfig({
     json: true,
   },
   e2e: {
+    supportFile: 'cypress/support/e2e.ts',
     screenshotOnRunFailure: true,
     setupNodeEvents(on, config) {
       const envName = process.env.ENV || 'dev';

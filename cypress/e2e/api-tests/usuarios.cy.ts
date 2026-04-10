@@ -1,13 +1,15 @@
+import { UserData } from '../../support/types';
+
 describe('Fluxo de testes nas APIs de Usuários', () => {
-    let authToken;
-    let adminUser;
-  
+    let authToken: string;
+    let adminUser: UserData;
+
     before('Criar e logar usuário administrador', () => {
       cy.createAndLoginAdmin();
-      
-      cy.get('@user').then(user => {
+
+      cy.get<UserData>('@user').then(user => {
         adminUser = user;
-        authToken = window.localStorage.getItem('authToken');
+        authToken = window.localStorage.getItem('authToken') as string;
         cy.log('Admin criado e logado:', user.email);
       });
     });

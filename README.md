@@ -2,7 +2,7 @@
 
 ![CI](https://github.com/jimmy-pontes/cypress-api-frontend-automation/actions/workflows/cypress.yml/badge.svg)
 
-Este projeto demonstra a implementação de testes automatizados de API e Frontend utilizando o Cypress, com uma arquitetura modular, escalável e multiambiente. A aplicação alvo é a [ServerRest](https://serverest.dev).
+Este projeto demonstra a implementação de testes automatizados de API e Frontend utilizando **Cypress** com **TypeScript**, com uma arquitetura modular, escalável e multiambiente. A aplicação alvo é a [ServerRest](https://serverest.dev).
 
 - **Frontend:** https://front.serverest.dev  
 - **API & Documentação:** https://serverest.dev
@@ -58,7 +58,7 @@ Executa todos os testes automaticamente no terminal, exibindo apenas os resultad
 ### Execução de teste específico
 
 ```bash
-npm run spec --spec="cypress/e2e/caminho/do/teste.cy.js"
+npm run spec --spec="cypress/e2e/caminho/do/teste.cy.ts"
 ```
 
 Executa apenas o arquivo de teste especificado.
@@ -95,7 +95,7 @@ O projeto possui integração contínua via **GitHub Actions**. O workflow é di
 
 ### O que acontece em cada execução
 
-1. O ambiente é provisionado com **Ubuntu** e **Node.js 18**
+1. O ambiente é provisionado com **Ubuntu** e **Node.js 20**
 2. As dependências são instaladas via `npm ci`
 3. Todos os testes são executados em modo headless
 4. O relatório **Mochawesome** é gerado automaticamente
@@ -148,21 +148,20 @@ cypress-api-frontend-automation/
 ├── cypress/
 │   ├── e2e/
 │   │   ├── api-tests/           → Testes de API
-│   │   │   
 │   │   └── frontend-tests/      → Testes da interface web
-│   │      
 │   ├── fixtures/                → Dados de teste (JSON)
 │   ├── mappings/
 │   │   ├── routes/              → Rotas do backend
-│   │   │   
 │   │   └── selectors/           → Seletores do frontend
-│   │       
 │   ├── screenshots/             → Screenshots dos testes
 │   └── support/
-│       ├── commands.js          → Comandos personalizados reutilizáveis
-│       ├── config.js            → Configuração de URLs por ambiente
-│       └── e2e.js               → Centralização das importações
+│       ├── commands.ts          → Comandos personalizados tipados
+│       ├── config.ts            → Configuração de URLs por ambiente
+│       ├── cypress.d.ts         → Declarações de tipos globais
+│       ├── e2e.ts               → Centralização das importações
+│       └── types.ts             → Interfaces do projeto
 ├── cypress.config.js            → Configuração principal do Cypress
+├── tsconfig.json                → Configuração do TypeScript
 ├── package.json                 → Dependências e scripts
 └── README.md                    → Documentação do projeto
 ```
@@ -171,7 +170,7 @@ cypress-api-frontend-automation/
 ## 🧠 Arquivos principais da arquitetura
 
 
-#### 📄 `support/commands.js`
+#### 📄 `support/commands.ts`
 
 Este arquivo centraliza todas os comandos personalizados que são chamados nos arquivos de teste.
 
@@ -187,16 +186,16 @@ cy.fazerLoginCompleto()  // Login completo via Frontend
 cy.visitLoginPage()      // Navega para página de login
 ```
 
-#### 📄 `support/e2e.js`
+#### 📄 `support/e2e.ts`
 
 Este arquivo centraliza todas as configurações e importações necessárias para a execução dos testes.
 
 - É carregado automaticamente pelo Cypress ao iniciar os testes.
-- Nele são importados módulos como `commands.js`, `config.js`, além das variáveis de ambiente.
+- Nele são importados módulos como `commands.ts`, `config.ts`, além das variáveis de ambiente.
 - Garante que todas as dependências estejam disponíveis globalmente nos testes, evitando importações repetidas em cada arquivo de teste.
 
 
-#### 📄 `support/config.js`
+#### 📄 `support/config.ts`
 
 Este arquivo define as **URLs base** utilizadas durante a execução dos testes, separadas por ambiente.
 
@@ -221,11 +220,14 @@ Este arquivo é o ponto central de configuração do Cypress. Ele define o compo
 
 ## ✅ Boas Práticas Implementadas
 
+- **TypeScript** com interfaces tipadas, declarações globais e autocomplete completo.
 - Arquitetura multiambiente para testes isolados e realistas.
 - Separação clara entre testes de API e Frontend.
-- Comandos customizados reutilizáveis para reduzir duplicações.
-- Organização modular para facilitar manutenção e escalabilidade.
-- O projeto pode ser facilmente integrado a pipelines CI/CD.
+- Comandos customizados tipados e reutilizáveis para reduzir duplicações.
+- **cy.intercept()** para validação de chamadas de rede nos testes de frontend.
+- Geração de dados dinâmicos com **Faker.js** em todos os pontos do projeto.
+- Relatório visual com **Mochawesome** (HTML com gráficos e screenshots de falhas).
+- **CI/CD** com GitHub Actions, gerando relatório como artefato automaticamente.
 
 
 ## 📌 Requisitos

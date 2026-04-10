@@ -1,13 +1,15 @@
+import { UserData } from '../../support/types';
+
 describe('Fluxo de testes nas APIs de Carrinhos', () => {
-    let adminToken;
-    let adminUser;
-  
+    let adminToken: string;
+    let adminUser: UserData;
+
     before('Criar usuário administrador para produtos', () => {
       cy.createAndLoginAdmin();
-      
-      cy.get('@user').then(admin => {
+
+      cy.get<UserData>('@user').then(admin => {
         adminUser = admin;
-        adminToken = window.localStorage.getItem('authToken');
+        adminToken = window.localStorage.getItem('authToken') as string;
         cy.log('Admin criado e logado:', admin.email);
       });
     });

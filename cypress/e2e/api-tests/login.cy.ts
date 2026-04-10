@@ -1,9 +1,11 @@
+import { UserData } from '../../support/types';
+
 describe('Fluxo de login', () => {
 
     it('Login com sucesso de usuário padrão', () => {
         cy.createAndLoginUser();
-      
-        cy.get('@user').then(user => {
+
+        cy.get<UserData>('@user').then(user => {
           cy.log('Usuário criado e logado:', user.email);
         });
       });
@@ -11,8 +13,8 @@ describe('Fluxo de login', () => {
 
       it('Login com sucesso de usuário administrador', () => {
         cy.createAndLoginAdmin();
-      
-        cy.get('@user').then(user => {
+
+        cy.get<UserData>('@user').then(user => {
           cy.log('Usuário criado e logado:', user.email);
         });
       });
